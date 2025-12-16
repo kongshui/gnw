@@ -1,7 +1,7 @@
 package nodeservice
 
 import (
-	"github.com/kongshui/gnw/node/nodeinit"
+	"github.com/kongshui/gnw/nodeweb/nodeinit"
 )
 
 var (

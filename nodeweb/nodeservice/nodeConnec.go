@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 
 	msginterface "github.com/kongshui/gnw/msg/msginterface"
-	"github.com/kongshui/gnw/node/message"
+	"github.com/kongshui/gnw/nodeweb/message"
 )
 
 // nodeInitMsgConn
