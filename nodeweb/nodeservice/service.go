@@ -2,6 +2,7 @@ package nodeservice
 
 import (
 	"github.com/kongshui/gnw/node/nodeinit"
+	"github.com/kongshui/gnw/nodeweb/message"
 )
 
 var (
@@ -15,6 +16,8 @@ var (
 )
 
 func init() {
+	// 初始化消息
+	message.Init()
 	// go getBackDomain(first_ctx)
 	// go RegisterToEtcd(first_ctx)
 	// Listen(first_ctx)

@@ -43,7 +43,7 @@ var (
 	}}
 )
 
-func init() {
+func Init() {
 	go MessageMap.AutoDelete()
 	// 发送load
 	go loadMessageHandler()
