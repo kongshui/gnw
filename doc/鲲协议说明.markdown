@@ -1,0 +1,273 @@
+# 鲲协议说明
+
+**备注** ： 后期gateway会动态分配链接，如果链接超过一定个数，则返回前端relineTo指令，给出需要链接的服务器地址，然后断开链接，以防止分配不均匀，
+或者向后端请求链接Id和地址，获取Id后通过Id向前端发起请求，没有链接Id则视为错误链接，
+message relineTo{
+   string Addr = 1; //ip和端口或者域名
+}
+
+1. **链接协议**
+   1.1 前后端协议使用websocket链接
+   1.2 前端发送大部分使用forward转发协议，此协议为messageBody包装真正的信息，信息格式也为messageBody格式
+   1.4 前端接收消息为MessageBody消息，直接通过协议Id或者协议类型，对MessageData进行对应的解析即可（messageData为二进制模式）
+2. **messageBody协议：消息体协议**
+   *protobuf结构体为：*
+   message MessageBody {
+      uint32 MessageId = 1;           // 消息ID
+      string MessageType = 2;         // 消息类型
+      bytes MessageData = 3; // 消息数据
+      int64 Timestamp = 4;   // 时间戳
+      string Uuid = 5;        // 用户ID
+      string Extra = 6;       // 其他内容，比如路径或者其他
+   }
+   *文件名：* messagebody.proto
+   **备注：** Extra暂时只为foward消息发送时的路径，其他协议暂时不需要，Uuid作为客户端验证参数，每次发送消息需要填上，第一次接收到TokenAck消息和
+   ReLoginAck消息时，需要将此时MessageBody中的Uuid缓存下来，后续消息需要用此Uuid作为验证
+3. **Token登录协议**
+  *protobuf结构体为：*
+   message TokenMessage{
+      string token = 1;       //客户端token
+      int64 timestamp = 2;    //客户端获取token时间戳
+   }
+   *文件名：* tokenmessage.proto
+   **备注：** token为客户端从抖音处获得的token，此token有效期为半小时，如果请求后没有收到tokenack协议返回，可以多次请求
+4. **TokenAck登录返回协议**
+   *protobuf结构体为：*
+   message AnchorInfoMessage {
+      string RoomId = 1;  //主播房间号
+      string AnchorOpenId = 2;  //主播openId
+      string NickName = 3;  //主播昵称
+      string AvatarUrl = 4;  //主播头像
+   }
+   *文件名：* anchorinfo.proto
+   **备注：** TokenAck为服务端收到token后，请求抖音云成功以后获取到的主播信息，此信息需要缓存下来直至直播间消失
+5. **SyncGameStart同步游戏状态协议**
+   *protobuf结构体为：*
+   message SyncGameStatusMessage {
+      string AnchorOpenId = 1;    //主播id
+      string AppId = 2;           //小游戏id
+      string RoomId = 3;          //房间id
+      int64 RoundId = 4;          //对局id
+      int64 StartTime = 5;        //开始时间
+      int64 EndTime = 6;          //结束时间
+      int32 Status = 7;           //状态,当前房间的游戏对局状态（1=已开始、2=已结束）
+      repeated GroupResult GroupResultList = 8;   //对局结果
+   }
+   message GroupResult {
+      string GroupId = 1; //分组id
+      int32 Result = 2;   //对局结果（1=胜利、2=失败、3=平局）
+   }
+   *文件名：* syncgamestatus.proto,groupresult.proto
+   **备注：**  SyncGameStart为游戏开始前传递的信息，必须传递参数为：AnchorOpenId主播openId，AppId小程序appId，RoomId房间Id，RoundId对局Id，对局Id只能为自增，建议使用当前时间戳，StartTime为对局开始时间。 同步游戏状态开始和结束为同一结构体，传递时请注意
+6. **SyncGameStartAck同步游戏状态返回协议**
+   *protobuf结构体为：*
+   message RoundReadyMessage {
+      int64 RoundId = 1;          //对局id
+      string RoomId = 2;          //房间id
+      int64 Timestamp = 3;        //时间戳
+      float LiveLikeScore = 4;    //点赞积分
+   }
+   *文件名：* roundready.proto
+   **备注：**  SyncGameStartAck传递信息为RoundRead消息体，其中如果点赞有积分，并且需要手动调整，则使用LiveLikeScore参数，如果不需要，对比对局Id和房间Id无误后，可以请求推送接口，开启消息推送
+7. **消息推送**
+   **备注：** 消息推送为http请求，开始请求接口为：/start_game，结束请求接口为：/finish_game
+8. **SyncGameEnd同步游戏状态结束协议**
+   *protobuf结构体为：* 同SyncGameStart 结构体
+    **备注：** 为对局游戏结束时开始发送，必须传递参数为AnchorOpenId主播openId，AppId小程序appId，RoomId房间Id，RoundId对局Id，EndTime结束时间，Status对局状态，1，已经开始，2，已经结束，GroupResultList组信息，GroupId为分组Id，Result为对局结果，1胜利，2失败，3平局，如鲲，为多组，可以设置为每个蛋为一组。此消息暂没有返回信息
+9. **RoundDataUpLoad上传游戏数据协议**
+    *protobuf结构体为：*
+    message RoundUploadMessage {
+      string RoomId = 1;          //主播房间id
+      string AnchorOpenId = 2;    //主播id
+      int64 RoundId = 3;          //对局id
+      repeated GroupResult GroupResultList = 4;   //对局结果列表
+      repeated GroupUser GroupUserList = 5;       //玩家列表
+    }
+   message GroupResult {
+      string GroupId = 1; //分组id
+      int32 Result = 2;   //对局结果（1=胜利、2=失败、3=平局）
+   }
+   message GroupUser {
+      string OpenId = 1;      //用户openId
+      string GroupId = 2;     //组Id
+      int64 Score = 3;        //玩家分数
+      int64 Rank = 4;         //玩家排名
+      int32 RoundResult = 5;  //对局结果(1=胜利、2=失败、3=平局)
+   }
+   *文件名：* roundupload.proto, groupresult.proto,groupuser.proto
+   **备注：** 其中GroupId在此游戏中为选择的蛋的Id，RoundResult为此玩家在游戏中时胜利还是失败，同时确定胜利失败的条件，是存活下来为胜利，还是第一名之类的为胜利，score为本对局得分，rank是玩家本对局排名。此消息暂没有返回信息
+10. **GetVersionTopHundred获取当前版本前100名协议**
+    *protobuf结构体为：* 无
+    **备注：** 请求体为空即可，协议号对上就行
+11. **GetVersionTopHundredAck获取当前版本前100名返回协议**
+   *protobuf结构体为：*
+   message UserInfoListMessage {
+      repeated UserInfo UserInfoList = 1; //用户列表
+      int64 Timestamp = 2;    //时间戳
+   }
+   message UserInfo {
+      string OpenId = 1;      // 用户的openId
+      string NickName = 2;    // 用户的昵称
+      string AvatarUrl = 3;  // 用户的头像
+      int64 Score = 4;       // 用户的积分
+      int64 Rank = 5;        // 用户的排名
+      int64 WinningStreamCoin = 6;  // 用户的连胜币
+   }
+   *文件名：* userinfolist.proto, userinfo.proto
+12. **GetMonthTopHundred获取当月前100名协议**
+   *protobuf结构体为：* 无
+   **备注：** 请求体为空即可，协议号对上就行
+13. **GetMonthTopHundredAck获取当月前100名返回协议**
+    **备注：**  返回体格式和要求与GetVersionTopHundredAck一样
+14. **UseWinnerStreamCoin使用连胜币请求协议**
+   *protobuf结构体为：*
+   message RequestwinnerstreamcoinMessage{
+      string  OpenId = 1;         //用户ID
+      int64  UseNum = 2;         //使用连胜币数量
+      int64  RoundId = 3;        //对局ID
+      int64  GiftId = 4;         //礼物ID
+      int64  TimeStamp = 5;       //时间戳
+   }
+   *文件名：* requestwinnerstreamcoin.proto
+   **备注：** GiftId为礼物Id，比如炸弹、甜甜圈等
+15. **UseWinnerStreamCoin使用连胜币请求返回协议**
+   *protobuf结构体为：*
+   message ResponsewinnerstreamcoinMessage{
+      string  OpenId = 1;                     //用户ID
+      int64  WinningStreamCoin = 2;         //现在连胜币数量
+      int64  RoundId = 3;        //对局ID
+      int64  GiftId = 4;         //礼物ID
+      int64  TimeStamp = 5;       //时间戳
+      bool CanUse = 6;                //是否能够使用
+   }
+   *文件名：* requestwinnerstreamcoin.proto
+    **备注：** WinningStreamCoin：现在连胜币数量，CanUse：为是否能够使用连胜币，true为能够使用，false为不能够使用
+16. **UserAddWinnerStreamCoin用户添加连胜币请求协议**
+   *protobuf结构体为：*
+   message AddWinnerStreamCoinMessage {
+      bool  IsEnd = 1;    // 是否结束
+      repeated AddWinnerStreamCoin UserList = 2;
+   }
+   message AddWinnerStreamCoin {
+      string  OpenId = 1;     // 用户open_id
+      int64  AddNum = 2;      // 添加多少连胜币
+      string  RoomId = 3;      // 房间id
+      string AnchorOpenId = 4; // 主播open_id
+   }
+   *文件名：* addwinnerstreamcoin.proto
+   **备注：** IsEnd:是否不需要返回信息，如果不需要，则设为true，AddNum为添加多少连胜币,如果为零，尽量别添加在列表中
+17. **UserAddWinnerStreamCoinAck用户添加连胜币请求返回协议**
+   *protobuf结构体为：*
+   message ResponseAddWinnerStreamCoinMessage {
+      repeated ResponseAddWinnerStreamCoin UserList = 1;
+      int64 TimeStamp = 2;    // 毫秒级时间戳
+   }
+
+   message ResponseAddWinnerStreamCoin {
+      string  OpenId = 1;     // 用户open_id
+      int64 WinningStreamCoin = 2; // 现存连胜币
+   }
+   *文件名：* addwinnerstreamcoin.proto
+   **备注：** WinningStreamCoin为当前返回时刻玩家现存的连胜币多少
+18. **QueryWinnerStreamCoin查询连胜币协议**
+   *protobuf结构体为：*
+   message QueryWinnerStreamCoinMessage {
+      repeated string UserList = 1;    //查询用户列表
+      int64 TimeStamp = 2;
+   }
+   *文件名：*  querywinnerstreamcoin.proto
+   **备注：**  UserList为用户openId列表
+19. **QueryWinnerStreamCoin查询连胜币返回协议**
+   **备注：**  结构体和UserAddWinnerStreamCoinAck为一样
+20. **IsFirstComsume是否是第一次消费协议**
+   *protobuf结构体为：*
+   message IsConsumeMessage {
+      string OpenId = 1;      // 玩家ID
+      bool IsConsume = 2;     //是否第一次消费
+      int64 TimeStamp = 3;    //收到礼物时间戳，毫秒级
+   }
+   *文件名：* iscomsume.proto
+   **备注：**  前端请求时秩序发送玩家的OpenId，以及收到礼物的时间，此时间为发送礼物体内的消息时间，不是本地的消息时间
+21. **SingleRoomAddGroup单个房间加入分组协议**
+   *protobuf结构体为：*
+   message SingleRoomAddGroupMessage{
+    repeated SingleRoomAddGroupInfo UserList = 1;   //玩家列表
+    string RoomId = 2;      //房间id
+    string AnchorOpenId = 3; //主播openId
+   }
+   message SingleRoomAddGroupInfo{
+      string GroupId = 1;     //分组id
+      string OpenId = 2;      //玩家openId
+      string AvatarUrl = 3;   //玩家头像
+      string NickName = 4;    //玩家昵称
+   }
+   *文件名：* singleroomaddgroup.proto
+   **备注：** 单个主播房间中，加入一局游戏分组，
+22. **SingleRoomAddGroupAck单个房间加入分组返回协议**
+   *protobuf结构体为：*
+   message ResultUserAddGroupMessage {
+      repeated UserInfoStruct UserInfoList = 1; //userInfoList
+      int64 TimeStamp = 2;
+   }
+   message UserInfoStruct {
+      string OpenId = 1;              //玩家用户id
+      int64 VersionScore = 2;           //当前版本积分
+      int64 VersionRank = 3;            //当前版本排名
+      int64 WinningStreamCoin = 4;    //连胜币
+      bool IsFirstConsume  = 5;             //是否是第一次消费
+   }
+   *文件名：* resutuseraddgroup.proto
+   **备注：** IsFirstConsume: 为是否时第一次消费，后续查看是否需要月榜积分和排名
+23. **ReLogin重新登录协议**
+   *protobuf结构体为：*
+   message ReloginMessage {
+      string Token = 1;       // token
+      int64 Timestamp = 2;    // 时间戳
+      string GroupId = 3;     // 分组id
+      string UserId = 4;      // 用户id
+      string OpenId = 5;      // 用户open_id
+      string RoomId = 6;      // 房间id
+      int64 GradeLevel = 7;        // 段位
+   }
+   *文件名：* reloginmessage.proto
+   **备注：** Token:暂时可以不填，还没想到具体用途，Timestamp当前秒级时间戳，以后可能会作为判断使用，GroupId：分组Id，没有可不填写，UserId，没有可不填写,GradeLevel: 段位，现阶段没有，可不填写。 必填项有： OpenId：主播的openId，RoomId房间Id
+24. **ReLoginAck重新登录返回协议**
+    **备注：**  只要收到协议即为成功，不做其他处理，重连后，只有收到此协议才能够进行下一步，不然为重连失败或者重新登录
+25. **Forward转发协议**
+   大部分协议都走转发协议，转发协议使用messageBody消息体，其中MessageData为messageBody结构体的二进制格式，为真正的消息
+26. **ForwardAck转发返回协议**
+   此协议也使用messageBody消息体，遇到此类消息，先获取到messageBody的二进制数据，然后再使用messageId对应的格式解析
+27. **liveGift,liveLike,LiveComment**
+   **备注：** 此三个协议分别为礼物，点赞和评论消息，其中，三种协议的序列化格式为以下json格式（不走protobuf），
+   27.1. 评论数据结构体
+        {
+            msg_id: "123456781", // string类型id
+            sec_openid: "xxxx", // 评论用户的加密openid, 当前其实没有加密
+            content: "xxxx", // 评论内容
+            avatar_url: "xxx", // 评论用户头像
+            nickname: "xxxx", // 评论用户昵称(不加密)
+            timestamp: 1649068964, // 评论毫秒级时间戳
+        }
+   27.2. 礼物数据结构体
+        {
+            msg_id: "123456782", // string类型id
+            sec_openid: "xxxx", // 用户的加密openid，当前其实没有加密
+            sec_gift_id: "xxxx", // 加密的礼物id
+            gift_num: 123, // 送出的礼物数量
+            gift_value: 10000, // 礼物总价值，单位分
+            avatar_url: "xxx", // 用户头像
+            nickname: "xxxx", // 用户昵称(不加密)
+            timestamp: 1649068964, // 礼物毫秒级时间戳
+            test: true, // 如果是抖音平台的测试数据，则会下发该字段且值为 true。测试工具下发的送礼数据属于调试模式，不会有该字段，正式环境下也不会有该字段
+            audience_sec_open_id:"xxx" // 被送礼的嘉宾openid，当前没有加密
+        }
+   27.3. 点赞数据结构体
+        {
+            msg_id: "123456783", // string类型id
+            sec_openid: "xxxx", // 点赞用户的加密openid，当前其实没有加密
+            like_num: 123,     // 点赞数量，上游2s合并一次数据
+            avatar_url: "xxx", // 点赞用户头像
+            nickname: "xxxx", // 点赞用户昵称(不加密)
+            timestamp: 1649068964, // 点赞毫秒级时间戳
+        }
+28. **备注**

@@ -1,0 +1,24 @@
+[server]
+addr = "192.168.1.1"    #ip地址
+port = "3306"   #开放的端口号
+name = "game"   #节点名称
+group_id = "0"  #组名
+node_type = 3   #网关：1， node：2，client：3
+listen_mode = "tcp  #监听模式，tcp监听还是websocket监听，默认为tcp，
+
+[etcd]
+addr = ["127.0.0.1:2379","192.168.1.2:2380"] #etcd地址，ip+端口号，如果是集群，则是列表形式
+key = "/node" #监听的值
+username = "admin" #etcd用户名
+password = "123456" #etcd密码
+
+[logging]
+level = "debug" #日志等级
+file = "debug.log"  #日志名称
+max_size = "2104298746" #日志最大容量
+max_backups = 1 #最多多少个备份
+max_age = 1 #最大多少时间轮转一次日志
+
+[gateway]
+mode = "hash"   #链接后端模式，minload，最小负载，后续需要写struct，mincounter最小任务数，就是处理任务最少的服务器
+group_mode = ""     #是否是使用group模式，name:指定name进行后端链接，group：指定组列表进行链接
