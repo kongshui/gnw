@@ -9,7 +9,7 @@ var (
 	etcdClient = nodeinit.Ectd_client
 	gatewayId  int64
 	// first_ctx  = context.Background()
-	ziLog    = &nodeinit.Zilog
+	ziLog    = nodeinit.Zilog
 	debug    = false
 	nodeUuid = nodeinit.NodeUuid
 )
