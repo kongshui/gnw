@@ -1,8 +1,6 @@
 package nodeservice
 
 import (
-	conf "github.com/kongshui/danmu/conf/node"
-
 	"context"
 	"fmt"
 	"net"
@@ -12,11 +10,11 @@ import (
 
 func Listen(ctx context.Context) {
 	// Listen listen a port and accept the conn, then add the conn to client list and start receive message.
-	l, err := net.Listen("tcp", conf.GetConf().Server.Addr+":"+conf.GetConf().Server.Port)
+	l, err := net.Listen("tcp", config.Server.Addr+":"+config.Server.Port)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("listen on " + conf.GetConf().Server.Addr + ":" + conf.GetConf().Server.Port)
+	fmt.Println("listen on " + config.Server.Addr + ":" + config.Server.Port)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -31,5 +29,5 @@ func Listen(ctx context.Context) {
 // func WebListen() { // 等待etcd连接
 // 	r := gin.Default()
 // 	r.POST("/ws", message.WebGetFowardHandler)
-// 	r.Run(":" + conf.GetConf().Server.WebPort)
+// 	r.Run(":" + config.Server.WebPort)
 // }

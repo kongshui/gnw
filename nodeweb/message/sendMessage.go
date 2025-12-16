@@ -17,9 +17,7 @@ import (
 func sendMessage(uidStr string, msgConn msginterface.MsgConn, msgid pmsg.MessageId, data []byte, extra string) error {
 	_, err := msgConn.MessageWrite(msg.MsgContext(uidStr, msgid, data, extra))
 	if err != nil {
-		ziLog.Error(fmt.Sprintf("node发送消息失败, lableMessageId:%v, msgid:%v, err:%v, data:%v", uidStr, msgid, err, string(data)), debug)
-
-		return err
+		return fmt.Errorf("node发送消息失败, lableMessageId:%v, msgid:%v, err:%v", uidStr, msgid, err)
 	}
 	return nil
 }

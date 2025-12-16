@@ -35,7 +35,7 @@ func loadMessageHandler() {
 		}
 		for _, v := range MessageMap.GetConnAllMap() {
 			if err := sendMessage("", v, pmsg.MessageId_NodeLoad, sendLoad, ""); err != nil {
-				ziLog.Error(fmt.Sprintf("发送负载失败 %v", err), debug)
+				ziLog.Error(fmt.Sprintf("发送负载失败 %v,data:%v", err, sendLoad), debug)
 			}
 		}
 	}
