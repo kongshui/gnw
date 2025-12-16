@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	dao_etcd "github.com/kongshui/danmu/dao/etcd"
 
-	conf "github.com/kongshui/danmu/conf/node"
+	conf "github.com/kongshui/danmu/conf/nodeweb"
 
 	"github.com/kongshui/danmu/zilog"
 )
