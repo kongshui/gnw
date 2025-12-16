@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	dao_etcd "github.com/kongshui/danmu/dao/etcd"
 	"github.com/kongshui/gnw/nodeweb/message"
+	"github.com/kongshui/gnw/nodeweb/nodeservice"
 
 	conf "github.com/kongshui/danmu/conf/nodeweb"
 
@@ -28,6 +29,12 @@ func Init(ctx context.Context, etcd *dao_etcd.Etcd, zilog *zilog.LogStruct, conf
 	Config = config
 	Project = config.Project
 	message.Init(etcd, config, zilog, NodeUuid)
+	// 初始化节点服务
+	nodeservice.Init(config, etcd, zilog, NodeUuid)
+	// 初始化消息
+	// go getBackDomain(first_ctx)
+	// go RegisterToEtcd(first_ctx)
+	// Listen(first_ctx)
 	// go nodeservice.Listen(ctx)
 	// go nodeservice.RegisterToEtcd(ctx)
 }

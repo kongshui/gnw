@@ -1,22 +1,30 @@
 package nodeservice
 
 import (
-	"github.com/kongshui/gnw/nodeweb/nodeinit"
+	"github.com/google/uuid"
+	conf "github.com/kongshui/danmu/conf/nodeweb"
+	dao "github.com/kongshui/danmu/dao/etcd"
+	"github.com/kongshui/danmu/zilog"
 )
 
 var (
-	config     = nodeinit.Config
-	etcdClient = nodeinit.Ectd_client
+	config     *conf.Config
+	etcdClient *dao.Etcd
 	gatewayId  int64
 	// first_ctx  = context.Background()
-	ziLog    = nodeinit.Zilog
+	ziLog    *zilog.LogStruct
 	debug    = false
-	nodeUuid = nodeinit.NodeUuid
+	nodeUuid uuid.UUID
 )
 
-func init() {
+func Init(cfg *conf.Config, etcd *dao.Etcd, log *zilog.LogStruct, uid uuid.UUID) {
+	config = cfg
+	etcdClient = etcd
+	ziLog = log
+	nodeUuid = uid
 	// 初始化消息
 	// go getBackDomain(first_ctx)
 	// go RegisterToEtcd(first_ctx)
 	// Listen(first_ctx)
+
 }
