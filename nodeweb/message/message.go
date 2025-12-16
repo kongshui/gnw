@@ -4,10 +4,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/google/uuid"
 	msg "github.com/kongshui/gnw/msg/router"
-	"github.com/kongshui/gnw/nodeweb/nodeinit"
 
+	conf "github.com/kongshui/danmu/conf/nodeweb"
+	dao "github.com/kongshui/danmu/dao/etcd"
 	"github.com/kongshui/danmu/model/pmsg"
+	"github.com/kongshui/danmu/zilog"
 )
 
 const (
@@ -16,15 +19,15 @@ const (
 
 var (
 	// rdb           = dao_redis.GetRedisClient()
-	ectdClient = nodeinit.Ectd_client
+	ectdClient *dao.Etcd
 	MessageMap = msg.NewRouterClientMap() //uid和msgConn map
-	config     = nodeinit.Config          //配置
+	config     *conf.Config               //配置
 	// nats_client    = nats.NatsInit(config.Nats.Addr) //nats
 	Handler       = msg.NewMessageHandler() //msgid和handler
 	messageIdType = msg.NewIdTypeMap()      //messid和类型map
 	first_ctx     = context.Background()    // 初始化ctx
-	ziLog         = nodeinit.Zilog
-	nodeUuid      = nodeinit.NodeUuid
+	ziLog         *zilog.LogStruct
+	nodeUuid      uuid.UUID
 	debug         bool // 是否是debug模式
 	// bytePool       sync.Pool = sync.Pool{
 	// 	New: func() any {
@@ -43,7 +46,11 @@ var (
 	}}
 )
 
-func Init() {
+func Init(etcd *dao.Etcd, cfg *conf.Config, zlog *zilog.LogStruct, uid uuid.UUID) {
+	ectdClient = etcd
+	config = cfg
+	ziLog = zlog
+	nodeUuid = uid
 	go MessageMap.AutoDelete()
 	// 发送load
 	go loadMessageHandler()

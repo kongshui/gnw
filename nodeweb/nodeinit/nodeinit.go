@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	dao_etcd "github.com/kongshui/danmu/dao/etcd"
+	"github.com/kongshui/gnw/nodeweb/message"
 
 	conf "github.com/kongshui/danmu/conf/nodeweb"
 
@@ -26,6 +27,7 @@ func Init(ctx context.Context, etcd *dao_etcd.Etcd, zilog *zilog.LogStruct, conf
 	Zilog = zilog
 	Config = config
 	Project = config.Project
+	message.Init(etcd, config, zilog, NodeUuid)
 	// go nodeservice.Listen(ctx)
 	// go nodeservice.RegisterToEtcd(ctx)
 }

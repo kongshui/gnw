@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kongshui/gnw/nodeweb/nodeinit"
-
 	"github.com/kongshui/danmu/model/pmsg"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -29,7 +27,7 @@ func loadMessageHandler() {
 			}
 			sendLoad = []byte(strconv.FormatFloat(load/float64(len(cpuloads)), 'f', 2, 64))
 		} else {
-			load, err := nodeinit.GetLoadAvg()
+			load, err := GetLoadAvg()
 			if err != nil {
 				ziLog.Error(fmt.Sprintf("获取负载失败 %v", err), debug)
 			}

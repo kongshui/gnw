@@ -1,4 +1,4 @@
-package nodeinit
+package message
 
 import (
 	"fmt"
