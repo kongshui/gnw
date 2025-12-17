@@ -11,9 +11,6 @@ import (
 )
 
 func (c *WsConn) keepalived() {
-	if !c.heartBeatOpen {
-		return
-	}
 	defer c.Close()
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
@@ -41,6 +38,9 @@ func (c *WsConn) Ping() error {
 	_, err := c.MessageWrite(sendMessage)
 	if err != nil {
 		return err
+	}
+	if !c.heartBeatOpen {
+		return nil
 	}
 	atomic.AddInt32(&c.heartBeatCount, 1)
 	if c.heartBeatCount > 20 {

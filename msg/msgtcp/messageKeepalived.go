@@ -11,9 +11,6 @@ import (
 
 // 发送心跳
 func (c *TcpConn) keepalived() {
-	if !c.heartBeatOpen {
-		return
-	}
 	defer c.Close()
 	t := time.NewTicker(3 * time.Second)
 	bool := true
@@ -45,6 +42,10 @@ func (c *TcpConn) Ping() error {
 	_, err := c.MessageWrite(MsgContext("", pmsg.MessageId_Ping, []byte{}, ""))
 	if err != nil {
 		return err
+	}
+
+	if !c.heartBeatOpen {
+		return nil
 	}
 	atomic.AddInt32(&c.heartBeatCount, 1)
 
