@@ -11,27 +11,23 @@ import (
 
 // 发送心跳
 func (c *TcpConn) keepalived() {
-	defer c.Close()
+	defer func() {
+		c.Close()
+		c.SetOnline(false)
+		c.Cancel()
+	}()
 	t := time.NewTicker(3 * time.Second)
-	bool := true
 	defer t.Stop()
 	for {
 		select {
 		case <-t.C:
-			if !bool {
-				continue
-			}
-
 			if err := c.Ping(); err != nil {
 				log.Println("心跳发送失败,", "链接为：", c.RemoteAddr(), "本地为：", c.LocalAddr(), "错误为：", err)
-				c.Close()
-				c.SetState(5)
-				c.SetOnline(false)
-				c.cancel()
 				return
 			}
 			// log.Println("心跳发送成功")
 		case <-c.GetCtx().Done():
+			log.Println("心跳ctx已取消,", "链接为：", c.RemoteAddr(), "本地为：", c.LocalAddr())
 			return
 		}
 	}

@@ -374,20 +374,14 @@ func (node *NodeList) checkNodeOnline() {
 // 持续检查Node节点是否在线
 func (node *NodeList) CheckNodeOnlineLoop(ctx context.Context) {
 	t := time.NewTicker(3 * time.Second)
-	var check int32 = 0
 	defer t.Stop()
 	for {
 		select {
 		case <-t.C:
-			if check == 0 {
-				atomic.AddInt32(&check, 1)
-				node.checkNodeOnline()
-			}
-
+			node.checkNodeOnline()
 		case <-ctx.Done():
 			return
 		}
-		atomic.StoreInt32(&check, 0)
 	}
 }
 

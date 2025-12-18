@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -8,15 +9,30 @@ import (
 )
 
 func main() {
-	var (
-		t  Test
-		wg sync.WaitGroup
-	)
-	for range 100 {
-		wg.Add(1)
-		t.LockTest(&wg)
+	ctx := context.Background()
+	pctx, cancel := context.WithCancel(ctx)
+	pctx1, cancel2 := context.WithCancel(ctx)
+	defer cancel()
+	defer cancel2()
+	go func() {
+		t := time.NewTicker(2 * time.Second)
+		defer t.Stop()
+		count := 0
+		for range t.C {
+			count++
+			log.Println("ticker 2s")
+			if count >= 5 {
+				cancel()
+			}
+		}
+	}()
+	select {
+	case <-pctx.Done():
+		log.Println("pctx canceled")
+	case <-pctx1.Done():
+		log.Println("pctx1 canceled")
 	}
-	wg.Wait()
+	log.Println("main end")
 }
 
 type Test struct {

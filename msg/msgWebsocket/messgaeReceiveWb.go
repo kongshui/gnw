@@ -17,43 +17,50 @@ func (c *WsConn) ReceiveMessage(handler map[uint32]func(string, msginterface.Msg
 	go c.keepalived()
 
 	//接收消息
-	go c.receiveMsg(handler)
-
-	<-c.GetCtx().Done()
+	c.receiveMsg(handler)
 	log.Println("退出接收数据" + c.RemoteAddr().String())
 }
 
 // 接收数据
 func (c *WsConn) receiveMsg(handler map[uint32]func(string, msginterface.MsgConn, []byte, string)) {
-	defer c.Close()
+	defer func() {
+		c.Close()
+		c.SetOnline(false)
+		c.cancel()
+	}()
 	for {
-		mt, gdata, err := c.GetConn().ReadMessage()
-		if err != nil {
-			log.Println("接收websocket消息错误 GetConn：", err)
+		select {
+		case <-c.GetCtx().Done():
 			return
-		}
-		// // fmt.Println("websocket接收到消息：", string(gdata))
-		switch mt {
-		case websocket.PingMessage:
-			c.ReceivePing()
-		case websocket.PongMessage:
-			c.ReceivePong()
 		default:
-			data := &pmsg.MessageBody{}
-			err = proto.Unmarshal(gdata, data)
+			mt, gdata, err := c.GetConn().ReadMessage()
 			if err != nil {
-				log.Println("接收websocket消息错误：", err, "消息为：", gdata)
-				continue
+				log.Println("接收websocket消息错误 GetConn：", err)
+				return
 			}
-			switch data.GetMsgId() {
-			case pmsg.MessageId_Ping:
+			// // fmt.Println("websocket接收到消息：", string(gdata))
+			switch mt {
+			case websocket.PingMessage:
 				c.ReceivePing()
-			case pmsg.MessageId_Pong:
+			case websocket.PongMessage:
 				c.ReceivePong()
 			default:
-				handle, ok := handler[uint32(data.GetMsgId())]
-				if ok {
-					go handle(data.GetUuid(), c, data.GetMessageData(), data.GetExtra())
+				data := &pmsg.MessageBody{}
+				err = proto.Unmarshal(gdata, data)
+				if err != nil {
+					log.Println("接收websocket消息错误：", err, "消息为：", gdata)
+					continue
+				}
+				switch data.GetMsgId() {
+				case pmsg.MessageId_Ping:
+					c.ReceivePing()
+				case pmsg.MessageId_Pong:
+					c.ReceivePong()
+				default:
+					handle, ok := handler[uint32(data.GetMsgId())]
+					if ok {
+						go handle(data.GetUuid(), c, data.GetMessageData(), data.GetExtra())
+					}
 				}
 			}
 		}

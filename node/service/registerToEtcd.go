@@ -31,7 +31,7 @@ func RegisterToEtcd(ctx context.Context) {
 		os.Exit(1)
 	}
 	// 前端地址
-	domain := "http://" + config.Server.Addr + ":" + config.Server.WebPort
+	// domain := "http://" + config.Server.Addr + ":" + config.Server.WebPort
 
 	// 租约
 	listenId := etcdClient.NewLease(ctx, 5)
@@ -41,7 +41,7 @@ func RegisterToEtcd(ctx context.Context) {
 	}
 	etcdClient.Client.Put(ctx, path.Join("/", config.Project, common.Node_Register_key, data.Uuid), string(sData), clientv3.WithLease(listenId))
 	time.Sleep(3 * time.Second)
-	go func(domain string, ctx context.Context) {
+	go func(ctx context.Context) {
 		//定时发送
 		t := time.NewTicker(3 * time.Second)
 		defer t.Stop()
@@ -52,16 +52,12 @@ func RegisterToEtcd(ctx context.Context) {
 				if err != nil {
 					ziLog.Error(fmt.Sprintf("发送消息至etcd Node_Register_key 失败, err:%v", err), debug)
 				}
-				_, err = etcdClient.Client.Put(ctx, path.Join("/", config.Project, forward_domain_key, config.Server.Addr+":"+config.Server.WebPort), domain, clientv3.WithLease(listenId))
-				if err != nil {
-					ziLog.Error(fmt.Sprintf("发送消息至etcd forward_domain_key 失败, err:%v", err), debug)
-				}
 				return
 			case <-ctx.Done():
 				return
 			}
 		}
-	}(domain, ctx)
+	}(ctx)
 	etcdClient.KeepLease(ctx, listenId)
 	//立即发送
 	// _, err = etcdClient.Client.Put(ctx, common.Node_Register_key+"/"+data.Uuid, string(sData), clientv3.WithLease(listenId))

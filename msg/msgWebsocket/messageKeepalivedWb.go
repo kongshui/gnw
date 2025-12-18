@@ -11,20 +11,21 @@ import (
 )
 
 func (c *WsConn) keepalived() {
-	defer c.Close()
+	defer func() {
+		c.Close()
+		c.SetOnline(false)
+		c.Cancel()
+	}()
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {
 		select {
 		case <-c.GetCtx().Done():
+			log.Println("心跳ctx已取消,", "链接为：", c.RemoteAddr(), "本地为：", c.LocalAddr())
 			return
 		case <-t.C:
 			if err := c.Ping(); err != nil {
 				log.Println("心跳发送失败,", "链接为：", c.RemoteAddr(), "本地为：", c.LocalAddr(), "错误为：", err)
-				c.Close()
-				c.SetState(5)
-				c.SetOnline(false)
-				c.cancel()
 				return
 			}
 		}

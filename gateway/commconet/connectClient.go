@@ -108,10 +108,6 @@ func (node *NodeList) checkClientOnline() {
 			v.Close()
 			v.Cancel()
 			delete(node.Client, K)
-			if v.GetGroupId() != "" {
-				etcdClient.Client.Delete(context.Background(), path.Join("/", config.Project, common.GroupId_Register_key, v.GetUuid()))
-
-			}
 			// atomic.AddInt64(&node.ClientInt, -1)
 			continue
 		}

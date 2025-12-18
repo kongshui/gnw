@@ -14,39 +14,41 @@ import (
 
 // node消息持续读取数据
 func (c *TcpConn) receiveMsg(handler map[uint32]func(string, msginterface.MsgConn, []byte, string)) {
-	defer c.Close()
+	defer func() {
+		c.Close()
+		c.SetOnline(false)
+		c.Cancel()
+	}()
 	for {
-		msgLenth, err := c.readMsgHeader()
-		if err != nil {
-			c.SetOnline(false)
-			c.Close()
-			c.Cancel()
-			log.Println("链接断开3")
-			log.Println("读取头length错误", err)
+		select {
+		case <-c.GetCtx().Done():
 			return
-
-		}
-		msgData, err := c.readMsgData(msgLenth)
-		if err != nil {
-			c.SetOnline(false)
-			c.Close()
-			c.Cancel()
-			log.Println("链接断开4")
-			log.Println("读取body数据错误", err)
-			return
-		}
-		// c.CounterAdd()
-		// log.Println("收到消息: labelMessageId: ", msgData.GetUuid(), "msgId:", msgData.GetMessageId(), "msgData: ", msgData.GetMessageData())
-		// 心跳
-		switch msgData.GetMsgId() {
-		case pmsg.MessageId_Ping:
-			c.ReceivePing()
-		case pmsg.MessageId_Pong:
-			c.ReceivePong()
 		default:
-			handle, ok := handler[uint32(msgData.GetMsgId())]
-			if ok {
-				go handle(msgData.GetUuid(), c, msgData.GetMessageData(), msgData.GetExtra())
+			msgLenth, err := c.readMsgHeader()
+			if err != nil {
+				log.Println("链接断开3")
+				log.Println("读取头length错误", err)
+				return
+			}
+			msgData, err := c.readMsgData(msgLenth)
+			if err != nil {
+				log.Println("链接断开4")
+				log.Println("读取body数据错误", err)
+				return
+			}
+			// c.CounterAdd()
+			// log.Println("收到消息: labelMessageId: ", msgData.GetUuid(), "msgId:", msgData.GetMessageId(), "msgData: ", msgData.GetMessageData())
+			// 心跳
+			switch msgData.GetMsgId() {
+			case pmsg.MessageId_Ping:
+				c.ReceivePing()
+			case pmsg.MessageId_Pong:
+				c.ReceivePong()
+			default:
+				handle, ok := handler[uint32(msgData.GetMsgId())]
+				if ok {
+					go handle(msgData.GetUuid(), c, msgData.GetMessageData(), msgData.GetExtra())
+				}
 			}
 		}
 	}

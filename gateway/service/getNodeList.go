@@ -149,10 +149,10 @@ func gatewayInit(ctx context.Context) {
 	go message.NodeList.CheckClientOnlineLoop(ctx)
 	go message.NodeList.CheckNodeOnlineLoop(ctx)
 	go getRoomList(ctx)
-	go endService(ctx)
+	go nodeServerSet(ctx)
 }
 
-func endService(ctx context.Context) {
+func nodeServerSet(ctx context.Context) {
 	t := time.NewTicker(3 * time.Second)
 	defer message.NodeList.DisconnectAllNode()
 	defer t.Stop()
