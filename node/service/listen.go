@@ -16,7 +16,7 @@ func Listen(ctx context.Context) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("listen on " + conf.GetConf().Server.Addr + ":" + conf.GetConf().Server.Port)
+	ziLog.Info(fmt.Sprintf("listen on %s:%s", conf.GetConf().Server.Addr, conf.GetConf().Server.Port), debug)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
