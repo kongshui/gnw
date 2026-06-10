@@ -66,8 +66,8 @@ github.com/klauspost/compress v1.18.0 h1:c/Cqfb0r+Yi+JtIEq73FWXVkRonBlf0CRNYc8Zt
 github.com/klauspost/compress v1.18.0/go.mod h1:2Pp+KzxcywXVXMr50+X0Q/Lsb43OQHYWRCY2AiWywWQ=
 github.com/klauspost/cpuid/v2 v2.3.0 h1:S4CRMLnYUhGeDFDqkGriYKdfoFlDnMtqTiI/sFzhA9Y=
 github.com/klauspost/cpuid/v2 v2.3.0/go.mod h1:hqwkgyIinND0mEev00jJYCxPNVRVXFQeu1XKlok6oO0=
-github.com/kongshui/danmu v0.0.7-beta.1 h1:DiuaDsGVg0gTC2vQADxNaQo/oPy1DHbbJSijPg+iSjE=
-github.com/kongshui/danmu v0.0.7-beta.1/go.mod h1:u/sYDrhrfG9YRK6vl8BVNsY+zGsTlgN3sPwTw1rRSv8=
+github.com/kongshui/danmu v0.0.7-beta.30 h1:vmKNf+vKEpyNxEd1MGoDUWsibcgp6T0mez7nl4auzFs=
+github.com/kongshui/danmu v0.0.7-beta.30/go.mod h1:vpRbdN40A8t3pSOBCDPFgr1UTkXSV+ptdEl9a+FG/W4=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
 github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 h1:6E+4a0GO5zZEnZ81pIr0yLvtUWk2if982qA3F3QD6H4=

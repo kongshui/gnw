@@ -7,7 +7,7 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/kongshui/danmu v0.0.7-beta.1
+	github.com/kongshui/danmu v0.0.7-beta.30
 	github.com/nats-io/nats.go v1.47.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	go.etcd.io/etcd/api/v3 v3.6.6
