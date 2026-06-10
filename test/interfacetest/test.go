@@ -9,15 +9,13 @@ import (
 )
 
 func main() {
-	var d D
 	var c *net.Conn
-	var e *websocket.Conn
-	fmt.Println(reflect.TypeOf(c))
-	fmt.Println(reflect.TypeOf(&d))
-	if reflect.TypeOf(e).String() == "*websocket.Conn" {
+	fmt.Println(reflect.TypeFor[*net.Conn]())
+	fmt.Println(reflect.TypeFor[*D]())
+	if reflect.TypeFor[*websocket.Conn]().String() == "*websocket.Conn" {
 		fmt.Println("true")
 	}
-	if reflect.TypeOf(c).String() == "*net.Conn" {
+	if reflect.TypeFor[*net.Conn]().String() == "*net.Conn" {
 		fmt.Println("true")
 	}
 }
