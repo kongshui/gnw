@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	var c *net.Conn
+	// var c *net.Conn
 	fmt.Println(reflect.TypeFor[*net.Conn]())
 	fmt.Println(reflect.TypeFor[*D]())
 	if reflect.TypeFor[*websocket.Conn]().String() == "*websocket.Conn" {

@@ -23,6 +23,9 @@ func sendDisConnectMsg() {
 		// fmt.Println("开始发送断联消息", start)
 		start = false
 		// fmt.Println("开始发送断联消息", commconet.DisconnectMap.GetAll())
+		if len(commconet.DisconnectMap.GetAll()) == 0 {
+			continue
+		}
 		// 遍历断联uid
 		for k, v := range commconet.DisconnectMap.GetAll() {
 			data := &pmsg.Disconnect{}
@@ -47,7 +50,9 @@ func sendDisConnectMsg() {
 				ziLog.Error(fmt.Sprintf("SendDisConnectMsg sendMessageToNode err:%v", err.Error()), debug)
 				continue
 			}
-			commconet.DisconnectMap.Remove(k)
+			if !commconet.DisconnectMap.Remove(k) {
+				ziLog.Error(fmt.Sprintf("SendDisConnectMsg remove disconnectMap err:%v", k), debug)
+			}
 			pathMap.Remove(k)
 		}
 		start = true
